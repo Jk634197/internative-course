@@ -36,7 +36,7 @@ const upload = multer({
 router.post('/', uploadProfileImageToS3('courses').fields([{ name: 'careerPathImage', maxCount: 1 }, { name: 'technologies', maxCount: 10 }])
     , [], async (req, res) => {
         try {
-            const { title, description, tagline, duration, roadMap, isShort, questions, modules } = req.body;
+            const { title, description, tagline, duration, roadMap, price, isShort, questions, modules } = req.body;
             const techImageFiles = req.files["technologies"];
             if (!Array.isArray(techImageFiles) || techImageFiles.length === 0) {
                 return res
@@ -55,6 +55,7 @@ router.post('/', uploadProfileImageToS3('courses').fields([{ name: 'careerPathIm
             const course = new Course({
                 title,
                 description,
+                price,
                 tagline,
                 duration,
                 roadMap,
@@ -252,7 +253,7 @@ router.get('/:id', async (req, res) => {
 router.put('/', uploadProfileImageToS3('courses').fields([{ name: 'careerPathImage', maxCount: 1 }, { name: 'technologies', maxCount: 10 }])
     , [], async (req, res) => {
         try {
-            const { title, description, tagline, duration, roadMap, isShort, questions, modules, courseId } = req.body;
+            const { title, description, tagline, duration, price, roadMap, isShort, questions, modules, courseId } = req.body;
             const getCourse = await Course.findById(courseId);
             if (getCourse == undefined || getCourse == null) {
                 return res.status(404).json({ isSuccess: false, data: null, message: "no course found" });
@@ -283,6 +284,7 @@ router.put('/', uploadProfileImageToS3('courses').fields([{ name: 'careerPathIma
                 tagline: tagline,
                 duration: duration,
                 roadMap: roadMap,
+                price: price,
                 technologies: technologies,
                 careerPathImage: careerPathImage,
                 isShort: isShort

@@ -14,6 +14,7 @@ const userCourse = require('../models/userCourse');
 const questionSchema = require('../models/questionSchema');
 const { setQuestions, submitAnswer } = require('../utils/crudmoduels');
 const userQuestion = require('../models/userQuestion');
+const { getPaymentLink } = require('../utils/setup/razorpay');
 /* GET home page. */
 router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' });
@@ -178,30 +179,40 @@ router.post('/authenticateOtp', [oneOf([body('id').isEmail(), body('id').isMobil
   }
 })
 router.post('/update-user', authenticateToken, [body('mobileNo').optional().notEmpty().isMobilePhone().withMessage('please pass valid mobile no'), body('first').optional().notEmpty().isString().withMessage('please pass first name'),
-body('last').optional().notEmpty().isString().withMessage('please pass valid last name'), body('password').optional().notEmpty().isString().withMessage('please pass valid password')], checkErr, async (req, res, next) => {
-  try {
-    const { mobileNo, first, last } = req.body;
-    let { password } = req.body;
-    const userId = req.user._id;
-    checkExist = await userSchema.aggregate([
-      {
-        $match: {
-          _id: new mongoose.Types.ObjectId(userId)
-        }
-      }]);
-
-    if (checkExist.length > 0) {
-      const salt = await bcrypt.genSalt(10);
-      password = await bcrypt.hash(password, salt);
-      let updateDetails = await userSchema.findByIdAndUpdate(userId, { mobileNo, first, last, password }, { new: true });
-      return res.status(200).json({ issuccess: true, data: updateDetails, message: "user details updated" });
+body('last').optional().notEmpty().isString().withMessage('please pass valid last name'), body('password').optional().notEmpty().isString().withMessage('please pass valid password'), body('birthDate')
+  .matches(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+  .withMessage('Invalid date format')
+  .custom((value, { req }) => {
+    const [dd, mm, yyyy] = value.split('/');
+    const date = new Date(`${mm}/${dd}/${yyyy}`);
+    if (isNaN(date.getTime())) {
+      throw new Error('Invalid date');
     }
-    return res.status(404).json({ issuccess: false, data: null, message: "incorrect email id or mobile no" });
-  } catch (error) {
-    console.log(error.message);
-    return res.status(500).json({ issuccess: false, data: null, message: error.message || "Having issue is server" })
-  }
-})
+    return true;
+  })], checkErr, async (req, res, next) => {
+    try {
+      const { mobileNo, first, birthDate, last } = req.body;
+      let { password } = req.body;
+      const userId = req.user._id;
+      checkExist = await userSchema.aggregate([
+        {
+          $match: {
+            _id: new mongoose.Types.ObjectId(userId)
+          }
+        }]);
+
+      if (checkExist.length > 0) {
+        const salt = await bcrypt.genSalt(10);
+        password = await bcrypt.hash(password, salt);
+        let updateDetails = await userSchema.findByIdAndUpdate(userId, { mobileNo, first, last, password, birthDate }, { new: true });
+        return res.status(200).json({ issuccess: true, data: updateDetails, message: "user details updated" });
+      }
+      return res.status(404).json({ issuccess: false, data: null, message: "incorrect email id or mobile no" });
+    } catch (error) {
+      console.log(error.message);
+      return res.status(500).json({ issuccess: false, data: null, message: error.message || "Having issue is server" })
+    }
+  })
 
 router.post('/enroll-course', authenticateToken, [body('courseId').custom(async (value) => {
   if (!mongoose.isValidObjectId(value)) {
@@ -265,6 +276,45 @@ router.post('/enroll-course', authenticateToken, [body('courseId').custom(async 
     return res.status(500).json({ issuccess: false, data: null, message: error.message || "Having issue is server" })
   }
 })
+router.post('/paymentLink', authenticateToken, [body('courseId').custom(async (value) => {
+  if (!mongoose.isValidObjectId(value)) {
+    throw new Error('Invalid course ID');
+  }
+  const testimonial = await courseSchema.findById(value);
+  if (!testimonial) {
+    throw new Error('course not found');
+  }
+})], checkErr, async (req, res, next) => {
+  try {
+    const { courseId } = req.body;
+    const userId = req.user._id;
+    checkExist = await userCourse.aggregate([
+      {
+        $match: {
+          $and: [{
+            courseId: new mongoose.Types.ObjectId(courseId)
+          }, {
+            status: 2
+          }]
+        }
+      }]);
+    let getCourse = await courseSchema.findById(courseId);
+    if (checkExist.length > 0 && checkExist[0].lastAttempt < 3) {
+      return res.status(409).json({ issuccess: false, data: checkExist[0], message: "User already purchased this course" });
+    }
+    let enrollCourse = new userCourse({
+      userId: userId,
+      courseId: courseId
+    })
+    await enrollCourse.save();
+    const paymentLink = await getPaymentLink(courseId, 20000);
+    console.log(paymentLink)
+    return res.status(201).json({ issuccess: false, data: enrollCourse, message: "Enrollment Successfully" });
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ issuccess: false, data: null, message: error.message || "Having issue is server" })
+  }
+})
 router.post('/getquestions', authenticateToken, [body('attemptId').custom(async (value) => {
   if (!mongoose.isValidObjectId(value)) {
     throw new Error('Invalid attempt ID');
@@ -277,13 +327,57 @@ router.post('/getquestions', authenticateToken, [body('attemptId').custom(async 
   try {
     const { attemptId } = req.body;
     const userId = req.user._id;
-    getQuestions = await userQuestion.find({ attemptId: new mongoose.Types.ObjectId(attemptId) });
+    getQuestions = await userQuestion.aggregate([{ $match: { attemptId: new mongoose.Types.ObjectId(attemptId) } }, {
+      $lookup: {
+        from: "questions",
+        let: { question: "$question" },
+        pipeline: [{ $match: { $expr: { $eq: ["$question", "$$question"] } } }, { $project: { options: 1 } }],
+        as: 'optionsData'
+      }
+    },
+    {
+      $addFields: {
+
+      }
+    }]);
     return res.status(201).json({ issuccess: false, data: getQuestions, message: "Questions found Successfully" });
   } catch (error) {
     console.log(error.message);
     return res.status(500).json({ issuccess: false, data: null, message: error.message || "Having issue is server" })
   }
 })
+router.post('/verify', (req, res) => {
+  // get the webhook request body and headers
+  const body = req.body;
+  const signature = req.headers['x-razorpay-signature'];
+
+  // create a signature using your key_secret and the body
+  const crypto = require('crypto');
+  const generated_signature = crypto.createHmac('sha256', process.env.RAZORPAY_SECRET)
+    .update(JSON.stringify(body))
+    .digest('hex');
+
+  // compare the signatures and check the status of the payment
+  if (generated_signature === signature) {
+    // signature is valid
+    console.log('Webhook signature verified');
+    if (body.event === 'payment.paid') {
+      // payment is successful
+      console.log('Payment is successful');
+      console.log(body.payload.payment.entity);
+      // do your business logic here
+    } else {
+      // payment is not successful
+      console.log('Payment is not successful');
+      console.log(body.payload.payment.entity);
+      // do your business logic here
+    }
+  } else {
+    // signature is invalid
+    console.log('Webhook signature verification failed');
+    res.status(400).send('Invalid signature');
+  }
+});
 router.post('/submit-answer', authenticateToken, [body('questionId').custom(async (value) => {
   if (!mongoose.isValidObjectId(value)) {
     throw new Error('Invalid question ID');

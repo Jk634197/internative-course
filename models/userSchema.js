@@ -17,6 +17,10 @@ const userSchema = mongoose.Schema({
         type: String,
         default: ""
     },
+    birthDate:{
+        type:String,
+        default:""
+    },
     password: {
         type: String,
         default: ""

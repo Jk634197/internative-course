@@ -13,7 +13,7 @@ const courseSchema = mongoose.Schema({
         default: ''
     },
     duration: {
-        type: String,
+        type: Number,
         default: ''
     },
     roadMap: {
@@ -29,6 +29,10 @@ const courseSchema = mongoose.Schema({
         default: ''
     },
     technologies: [String],
+    price: {
+        type: Number,
+        default: 0
+    },
     isShort: {
         type: Boolean,
         default: false
