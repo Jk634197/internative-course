@@ -58,27 +58,39 @@ exports.getModulesByCourseId = async (req, res) => {
 };
 exports.submitAnswer = async (questionId, userId, answer) => {
     let getQuestion = await userQuestion.findById(questionId);
-    if (getQuestion != null || getQuestion != undefined) {
-        let getAnswer = await questionSchema.find({ question: getQuestion.question });
+    if (getQuestion != null && getQuestion != undefined) {
+        let getAnswer = await questionSchema.findOne({ question: getQuestion.question });
+        console.log(getQuestion.answer)
+        console.log(getQuestion.answer + "   " + answer)
         if (getQuestion.answer == "") {
             if (getAnswer != undefined && getAnswer.answer == answer) {
+                console.log("correct");
                 await userQuestion.findByIdAndUpdate(questionId, { answer: answer }, { new: true });
                 await userAttempt.findByIdAndUpdate(getQuestion.attemptId, { $inc: { result: 1 } }, { new: true });
             }
             else {
+                console.log('incorrect first')
                 await userQuestion.findByIdAndUpdate(questionId, { answer: answer }, { new: true });
             }
         }
         else if (answer != getQuestion.answer) {
+            if (getQuestion.answer == getAnswer.answer) {
+                console.log('correct last')
+                await userAttempt.findByIdAndUpdate(getQuestion.attemptId, { $inc: { result: -1 } }, { new: true });
+            }
+            else {
+                console.log('incorrect last')
+                await userAttempt.findByIdAndUpdate(getQuestion.attemptId, { $inc: { result: 1 } }, { new: true });
+            }
             if (getAnswer != undefined && getAnswer.answer == answer) {
+                console.log('correct new one')
                 await userQuestion.findByIdAndUpdate(questionId, { answer: answer }, { new: true });
                 await userAttempt.findByIdAndUpdate(getQuestion.attemptId, { $inc: { result: 1 } }, { new: true });
             }
             else {
-
+                console.log('incorrect new one')
                 await userQuestion.findByIdAndUpdate(questionId, { answer: answer }, { new: true });
                 await userAttempt.findByIdAndUpdate(getQuestion.attemptId, { $inc: { result: -1 } }, { new: true });
-
             }
         }
 
@@ -99,11 +111,11 @@ exports.setQuestions = async (userId, attemptId, questions) => {
 // Questions CRUD APIs
 // const Question = require('../models/question');
 const questionSchema = require('../models/questionSchema');
+const userAttempt = require('../models/userAttempt');
 const userQuestion = require('../models/userQuestion');
 
 exports.addQuestions = async (questions, courseId) => {
     try {
-
         await questionSchema.deleteMany({ courseId: new mongoose.Types.ObjectId(courseId) });
         const newQuestions = questions.map((question) => ({ ...question, courseId }));
         const savedQuestions = await questionSchema.insertMany(newQuestions);

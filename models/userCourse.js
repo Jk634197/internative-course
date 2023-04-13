@@ -25,6 +25,7 @@ const userCourse = mongoose.Schema({
     //2==purchased
     //3==rejection
     //4==not eligible
+    //5==expired
     status: {
         type: Number,
         default: 0

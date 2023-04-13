@@ -213,7 +213,6 @@ body('last').optional().notEmpty().isString().withMessage('please pass valid las
       return res.status(500).json({ issuccess: false, data: null, message: error.message || "Having issue is server" })
     }
   })
-
 router.post('/enroll-course', authenticateToken, [body('courseId').custom(async (value) => {
   if (!mongoose.isValidObjectId(value)) {
     throw new Error('Invalid course ID');
@@ -288,6 +287,7 @@ router.post('/paymentLink', authenticateToken, [body('courseId').custom(async (v
   try {
     const { courseId } = req.body;
     const userId = req.user._id;
+    let getUser = await userSchema.findById(userId);
     checkExist = await userCourse.aggregate([
       {
         $match: {
@@ -299,17 +299,24 @@ router.post('/paymentLink', authenticateToken, [body('courseId').custom(async (v
         }
       }]);
     let getCourse = await courseSchema.findById(courseId);
+    if (!getCourse.isShort) {
+      return res.status(409).json({ issuccess: false, data: null, message: "Not eligible for payment" });
+    }
     if (checkExist.length > 0 && checkExist[0].lastAttempt < 3) {
-      return res.status(409).json({ issuccess: false, data: checkExist[0], message: "User already purchased this course" });
+      return res.status(409).json({ issuccess: true, data: checkExist[0], message: "User already purchased this course" });
     }
     let enrollCourse = new userCourse({
       userId: userId,
       courseId: courseId
     })
     await enrollCourse.save();
-    const paymentLink = await getPaymentLink(courseId, 20000);
-    console.log(paymentLink)
-    return res.status(201).json({ issuccess: false, data: enrollCourse, message: "Enrollment Successfully" });
+    // console.log(getCourse.title)
+    const paymentLink = await getPaymentLink(courseId, getCourse.title, getUser, getCourse.price || 20000, enrollCourse._id);
+    enrollCourse.paymentId = paymentLink.id;
+    await enrollCourse.save();
+    enrollCourse._doc['paymentLink'] = paymentLink.short_url;
+    // console.log(enrollCourse)
+    return res.status(201).json({ issuccess: true, data: enrollCourse, message: "Enrollment Successfully" });
   } catch (error) {
     console.log(error.message);
     return res.status(500).json({ issuccess: false, data: null, message: error.message || "Having issue is server" })
@@ -378,6 +385,34 @@ router.post('/verify', (req, res) => {
     res.status(400).send('Invalid signature');
   }
 });
+// define a callback route for payment link
+router.post('/payment-link-callback', async (req, res) => {
+  // get the payment link data from the request body
+  const paymentLinkData = req.body;
+  console.log(paymentLinkData.payload.payment_link)
+  // check the status of the payment link
+
+  getRecordId = paymentLinkData.payload.payment_link.entity.notes.recordId
+  switch (paymentLinkData.event) {
+    case 'payment_link.cancelled':
+      // do something when a payment link is cancelled
+      await userCourse.findByIdAndUpdate(getRecordId, { status: 5 }, { new: true });
+      break;
+    case 'payment_link.paid':
+      await userCourse.findByIdAndUpdate(getRecordId, { status: 2, isEligible: true }, { new: true });
+      // do something when a payment link is paid
+      break;
+    case 'payment_link.expired':
+      await userCourse.findByIdAndUpdate(getRecordId, { status: 5 }, { new: true });
+      // do something when a payment link is paid
+      break;
+    default:
+      // handle unknown events
+      break;
+  }
+  // send a success response to Razorpay
+  res.status(200).send('OK');
+});
 router.post('/submit-answer', authenticateToken, [body('questionId').custom(async (value) => {
   if (!mongoose.isValidObjectId(value)) {
     throw new Error('Invalid question ID');
@@ -390,13 +425,38 @@ router.post('/submit-answer', authenticateToken, [body('questionId').custom(asyn
   try {
     const { questionId, answer } = req.body;
     const userId = req.user._id;
-    submitAnswer(questionId, userId, answer)
+    await submitAnswer(questionId, userId, answer)
     return res.status(201).json({ issuccess: true, data: null, message: "submitted answer" });
   } catch (error) {
     console.log(error.message);
     return res.status(500).json({ issuccess: false, data: null, message: error.message || "Having issue is server" })
   }
 })
+router.get('/my-course', authenticateToken, async function (req, res, next) {
+  try {
+    const userId = req.user._id
+    let getCourses = await userCourse.aggregate([
+      {
+        $match: {
+          $and: [{ userId: new mongoose.Types.ObjectId(userId) }, { isEligible: true }]
+        }
+      },
+      {
+        $lookup: {
+          from: 'courses',
+          localField: 'courseId',
+          foreignField: '_id',
+          as: 'courseData'
+        }
+      }
+    ])
+    return res.status(200).json({ issuccess: true, data: getCourses, message: "courses found successfully" });
 
+  }
+  catch (err) {
+    return res.status(500).json({ issuccess: false, data: null, message: err.message || "Having issue is server" })
+
+  }
+});
 
 module.exports = router;

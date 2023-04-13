@@ -6,18 +6,18 @@ const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY,
     key_secret: process.env.RAZORPAY_SECRET
 });
-
+const callbackUrl = process.env.CALLBACK
 // create a route to generate a payment link
-exports.getPaymentLink = (courseId, amount) => {
+exports.getPaymentLink = (courseId, courseName, customer, amount, enrollId) => {
     // create a payment link options object with amount, currency, description and callback_url
     const options = {
-        amount: amount, // amount in smallest currency unit
+        amount: amount * 100, // amount in smallest currency unit
         currency: 'INR',
-        description: 'Test Payment Link',
+        description: courseName,
         customer: {
-            name: "Gaurav Kumar",
-            email: "gaurav.kumar@example.com",
-            contact: "+919000090000"
+            name: customer.name,
+            email: customer.email,
+            contact: customer.mobileNo
         },
         notify: {
             sms: false,
@@ -25,10 +25,19 @@ exports.getPaymentLink = (courseId, amount) => {
         },
         reminder_enable: false,
         notes: {
-            course_name: "c++"
+            course_name: courseName,
+            recordId: enrollId
         },
-        callback_url: "https://example-callback-url.com/",
-        callback_method: "get"
+        callback_url: callbackUrl,
+        callback_method: "get",
+        options: {
+            checkout: {
+                name: "Intetnative Ed-Tech Pvt. Ltd.",
+                theme: {
+                    hide_topbar: true
+                }
+            }
+        }
     };
 
     // create a payment link using the Razorpay instance
