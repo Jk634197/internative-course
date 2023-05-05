@@ -432,6 +432,38 @@ router.post('/submit-answer', authenticateToken, [body('questionId').custom(asyn
     return res.status(500).json({ issuccess: false, data: null, message: error.message || "Having issue is server" })
   }
 })
+router.post('/get-score', authenticateToken, [body('attemptId').custom(async (value) => {
+  if (!mongoose.isValidObjectId(value)) {
+    throw new Error('Invalid question ID');
+  }
+  const testimonial = await userAttempt.findById(value);
+  if (!testimonial) {
+    throw new Error('attempt not found');
+  }
+})], checkErr, async (req, res, next) => {
+  try {
+    const { attemptId } = req.body;
+    const userId = req.user._id;
+    let getAttempt = await userAttempt.findById(attemptId);
+    if (getAttempt) {
+      let checkEligible = getAttempt.totalQuestion * 0.6
+      if (checkEligible <= getAttempt.result) {
+        getAttempt.isCleared = true;
+        await getAttempt.save();
+        await userCourse.findOneAndUpdate({ courseId: new mongoose.Types.ObjectId(getAttempt.courseId), userId: new mongoose.Types.ObjectId(userId) }, { status: 1 })
+      }
+      else {
+        getAttempt.isCleared = false;
+        await getAttempt.save();
+
+      }
+    }
+    return res.status(201).json({ issuccess: true, data: getAttempt, message: getAttempt != undefined ? 'scorebard found' : 'no scoreboard found' });
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ issuccess: false, data: null, message: error.message || "Having issue is server" })
+  }
+})
 router.get('/my-course', authenticateToken, async function (req, res, next) {
   try {
     const userId = req.user._id
