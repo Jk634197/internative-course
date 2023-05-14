@@ -252,7 +252,7 @@ router.post('/enroll-course', authenticateToken, [body('courseId').custom(async 
       await addAttempt.save();
       let updateCourse = await userCourse.findByIdAndUpdate(checkExist[0]._id, { $inc: { lastAttempt: 1 } }, { new: true });
       setQuestions(userId, addAttempt._id, getQuestions)
-      return res.status(201).json({ issuccess: false, data: { ...updateCourse._doc, ...{ attemptId: addAttempt._id } }, message: "You are allowed to retake exam" });
+      return res.status(201).json({ issuccess: true, data: { ...updateCourse._doc, ...{ attemptId: addAttempt._id } }, message: "You are allowed to retake exam" });
     }
     let enrollCourse = new userCourse({
       userId: userId,
@@ -269,7 +269,7 @@ router.post('/enroll-course', authenticateToken, [body('courseId').custom(async 
     })
     await addAttempt.save();
     setQuestions(userId, addAttempt._id, getQuestions)
-    return res.status(201).json({ issuccess: false, data: { ...enrollCourse._doc, ...{ attemptId: addAttempt._id } }, message: "Enrollment Successfully" });
+    return res.status(201).json({ issuccess: true, data: { ...enrollCourse._doc, ...{ attemptId: addAttempt._id } }, message: "Enrollment Successfully" });
   } catch (error) {
     console.log(error.message);
     return res.status(500).json({ issuccess: false, data: null, message: error.message || "Having issue is server" })
