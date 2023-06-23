@@ -4,11 +4,23 @@ const courseSchema = mongoose.Schema({
         type: String,
         default: ''
     },
+    thumbnail: {
+        type: String,
+        default: ''
+    },
     description: {
         type: String,
         default: ''
     },
+    homeDesc: {
+        type: String,
+        default: ""
+    },
     tagline: {
+        type: String,
+        default: ''
+    },
+    tagline1: {
         type: String,
         default: ''
     },

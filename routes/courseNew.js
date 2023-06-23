@@ -33,10 +33,10 @@ const upload = multer({
     fileFilter: fileFilter,
 });
 
-router.post('/', uploadProfileImageToS3('courses').fields([{ name: 'careerPathImage', maxCount: 1 }, { name: 'technologies', maxCount: 10 }])
+router.post('/', uploadProfileImageToS3('courses').fields([{ name: 'careerPathImage', maxCount: 1 }, { name: 'thumbnail', maxCount: 1 }, { name: 'technologies', maxCount: 10 }])
     , [], async (req, res) => {
         try {
-            const { title, description, tagline, duration, roadMap, price, isShort, questions, modules } = req.body;
+            const { title, description, homeDesc, tagline, tagline1, duration, roadMap, price, isShort, questions, modules } = req.body;
             const techImageFiles = req.files["technologies"];
             if (!Array.isArray(techImageFiles) || techImageFiles.length === 0) {
                 return res
@@ -47,16 +47,25 @@ router.post('/', uploadProfileImageToS3('courses').fields([{ name: 'careerPathIm
 
             // Validate career path image
             const careerPathImage = req.files["careerPathImage"][0].location;
+            const thumbnail = req.files["thumbnail"][0].location;
             if (!careerPathImage) {
                 return res
                     .status(400)
                     .json({ isSuccess: false, message: "No career path image provided." });
+            }
+            if (!thumbnail) {
+                return res
+                    .status(400)
+                    .json({ isSuccess: false, message: "No thumbnail image provided." });
             }
             const course = new Course({
                 title,
                 description,
                 price,
                 tagline,
+                tagline1,
+                homeDesc,
+                thumbnail,
                 duration,
                 roadMap,
                 technologies,
@@ -250,16 +259,16 @@ router.get('/:id', async (req, res) => {
         });
     }
 });
-router.put('/', uploadProfileImageToS3('courses').fields([{ name: 'careerPathImage', maxCount: 1 }, { name: 'technologies', maxCount: 10 }])
+router.put('/', uploadProfileImageToS3('courses').fields([{ name: 'thumbnail', maxCount: 1 }, { name: 'careerPathImage', maxCount: 1 }, { name: 'technologies', maxCount: 10 }])
     , [], async (req, res) => {
         try {
-            const { title, description, tagline, duration, price, roadMap, isShort, questions, modules, courseId } = req.body;
+            const { title, description, homeDesc, tagline, tagline1, duration, price, roadMap, isShort, questions, modules, courseId } = req.body;
             const getCourse = await Course.findById(courseId);
             if (getCourse == undefined || getCourse == null) {
                 return res.status(404).json({ isSuccess: false, data: null, message: "no course found" });
 
             }
-            let technologies, careerPathImage;
+            let technologies, careerPathImage, thumbnail;
             if ('technologies' in req.files && req.files.technologies.length > 0) {
                 const techImageFiles = req.files["technologies"];
                 if (!Array.isArray(techImageFiles) || techImageFiles.length === 0) {
@@ -278,6 +287,9 @@ router.put('/', uploadProfileImageToS3('courses').fields([{ name: 'careerPathIma
                         .json({ isSuccess: false, data: null, message: "No career path image provided." });
                 }
             }
+            if ('thumbnail' in req.files && req.files.thumbnail.length > 0) {
+                thumbnail = req.files["thumbnail"][0].location;
+            }
             const course = await Course.findByIdAndUpdate(courseId, {
                 title: title,
                 description: description,
@@ -285,9 +297,12 @@ router.put('/', uploadProfileImageToS3('courses').fields([{ name: 'careerPathIma
                 duration: duration,
                 roadMap: roadMap,
                 price: price,
+                tagline1: tagline1,
+                homeDesc: homeDesc,
                 technologies: technologies,
                 careerPathImage: careerPathImage,
-                isShort: isShort
+                isShort: isShort,
+                thumbnail: thumbnail
             }, { new: true })
             if (modules != undefined && Array.isArray(modules)) {
 

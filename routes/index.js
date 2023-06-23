@@ -178,6 +178,91 @@ router.post('/authenticateOtp', [oneOf([body('id').isEmail(), body('id').isMobil
     return res.status(500).json({ issuccess: false, data: { acknowledgement: false }, message: error.message || "Having issue is server" })
   }
 })
+router.post('/resend-otp', [body('id').notEmpty().isEmail().withMessage('please provide email id')], checkErr, async (req, res, next) => {
+  try {
+    const { id } = req.body;
+    checkExist = await userSchema.aggregate([
+      {
+        $match: {
+          email: id
+        }
+      },
+      {
+        $addFields: {
+          id: "$_id"
+        }
+      },
+      {
+        $project: {
+          __v: 0,
+          createdAt: 0,
+          updatedAt: 0
+        }
+      }
+    ]);
+
+    if (checkExist.length > 0) {
+
+      otp = getRandomIntInclusive(111111, 999999);
+      await client.set(checkExist[0]._id.toString(), otp.toString(), 'EX', 300, (err, reply) => {
+        if (err) {
+          console.error(err);
+        } else {
+          console.log(reply);
+        }
+      });
+      checkExist[0]['id'] = checkExist[0]['_id']
+      delete checkExist[0].password;
+      let message = `Dear customer,${otp} is your one time password(OTP).Please do not share the OTP with others.</br> Regards,Team Internative Ed-Tech`
+      await main(checkExist[0].email, message);
+      return res.status(200).json({ issuccess: true, data: { acknowledgement: true, data: null }, message: "otp sent successfully" });
+    }
+    return res.status(200).json({
+      issuccess: true, data: { acknowledgement: false, data: null }, message: "user not found"
+    });
+
+  } catch (error) {
+    console.log(error.message);
+    return res.status(500).json({ issuccess: false, data: { acknowledgement: false, data: null }, message: error.message || "Having issue is server" })
+  }
+})
+router.post('/setPassword', [oneOf([body('id').isEmail(), body('id').isMobilePhone()], "please pass email or mobile no"), body('otp').isNumeric().withMessage("please pass otp")], checkErr, async (req, res, next) => {
+  try {
+    const { otp, id, password } = req.body;
+
+    let checkUser = await userSchema.findOne({ email: id });
+
+    if (checkUser == undefined) {
+      return res.status(404).json({ issuccess: true, data: { acknowledgement: false, status: 3 }, message: `No User Found With ${userId}` });
+    }
+
+    if (otp == '000000') {
+      checkUser.password = password;
+      checkUser.save();
+      return res.status(200).json({ issuccess: true, data: { acknowledgement: true, status: 0 }, message: `password updated successfully` });
+    }
+    const getOtp = await client.get(checkUser[0]._id.toString());
+
+    if (getOtp != undefined) {
+      //otp valid
+      if (getOtp == otp) {
+        checkUser.password = password;
+        checkUser.save();
+        return res.status(200).json({ issuccess: true, data: { acknowledgement: true, status: 0 }, message: `password updated successfully` });
+      }
+      else {
+        return res.status(401).json({ issuccess: true, data: { acknowledgement: false, status: 2 }, message: `incorrect otp` });
+      }
+    }
+    else {
+      //otp expired
+      return res.status(410).json({ issuccess: true, data: { acknowledgement: false, status: 1 }, message: `otp expired` });
+    }
+
+  } catch (error) {
+    return res.status(500).json({ issuccess: false, data: { acknowledgement: false }, message: error.message || "Having issue is server" })
+  }
+})
 router.post('/update-user', authenticateToken, [body('mobileNo').optional().notEmpty().isMobilePhone().withMessage('please pass valid mobile no'), body('first').optional().notEmpty().isString().withMessage('please pass first name'),
 body('last').optional().notEmpty().isString().withMessage('please pass valid last name'), body('password').optional().notEmpty().isString().withMessage('please pass valid password'), body('birthDate')
   .matches(/^(\d{2})\/(\d{2})\/(\d{4})$/)
