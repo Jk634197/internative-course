@@ -15,6 +15,7 @@ const questionSchema = require('../models/questionSchema');
 const { setQuestions, submitAnswer } = require('../utils/crudmoduels');
 const userQuestion = require('../models/userQuestion');
 const { getPaymentLink } = require('../utils/setup/razorpay');
+const { uploadProfileImageToS3 } = require('../utils/aws');
 /* GET home page. */
 router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' });
@@ -263,7 +264,7 @@ router.post('/setPassword', [oneOf([body('id').isEmail(), body('id').isMobilePho
     return res.status(500).json({ issuccess: false, data: { acknowledgement: false }, message: error.message || "Having issue is server" })
   }
 })
-router.post('/update-user', authenticateToken, [body('mobileNo').optional().notEmpty().isMobilePhone().withMessage('please pass valid mobile no'), body('first').optional().notEmpty().isString().withMessage('please pass first name'),
+router.post('/update-user', uploadProfileImageToS3('courses').single('image'), authenticateToken, [body('mobileNo').optional().notEmpty().isMobilePhone().withMessage('please pass valid mobile no'), body('first').optional().notEmpty().isString().withMessage('please pass first name'),
 body('last').optional().notEmpty().isString().withMessage('please pass valid last name'), body('password').optional().notEmpty().isString().withMessage('please pass valid password'), body('birthDate')
   .matches(/^(\d{2})\/(\d{2})\/(\d{4})$/)
   .withMessage('Invalid date format')
@@ -289,7 +290,7 @@ body('last').optional().notEmpty().isString().withMessage('please pass valid las
       if (checkExist.length > 0) {
         const salt = await bcrypt.genSalt(10);
         password = await bcrypt.hash(password, salt);
-        let updateDetails = await userSchema.findByIdAndUpdate(userId, { mobileNo, first, last, password, birthDate }, { new: true });
+        let updateDetails = await userSchema.findByIdAndUpdate(userId, { image: req.file != undefined ? req.file.location : checkExist[0].image, mobileNo, first, last, password, birthDate }, { new: true });
         return res.status(200).json({ issuccess: true, data: updateDetails, message: "user details updated" });
       }
       return res.status(404).json({ issuccess: false, data: null, message: "incorrect email id or mobile no" });
