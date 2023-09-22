@@ -12,6 +12,7 @@ const questionRoute = require('./routes/questions');
 const moduleRoute = require('./routes/modules');
 const teamRoute = require('./routes/team');
 const faqRoute = require('./routes/faq');
+const adminRoute = require('./routes/admin');
 const testimonialRoute = require('./routes/testimonial');
 require('./utils/redis');
 var app = express();
@@ -27,6 +28,8 @@ app.use(cookieParser());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
+
+app.use('/admin', adminRoute);
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/course', courseRoute);

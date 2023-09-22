@@ -3,9 +3,13 @@ const express = require("express");
 const { default: mongoose, mongo } = require("mongoose");
 const router = express.Router();
 const multer = require("multer");
+const courseSchema = require("../models/courseSchema");
 const Course = require("../models/courseSchema");
+const modulesSchema = require("../models/modulesSchema");
 const Modules = require("../models/modulesSchema");
+const questionSchema = require("../models/questionSchema");
 const Question = require("../models/questionSchema");
+const userCourse = require("../models/userCourse");
 const { uploadProfileImageToS3 } = require("../utils/aws");
 const { addModules, addQuestions } = require("../utils/crudmoduels");
 
@@ -106,6 +110,24 @@ router.get('/', async (req, res) => {
                     let: { courseId: '$_id' },
                     pipeline: [{ $match: { $expr: { $eq: ["$courseId", "$$courseId"] } } }],
                     as: 'modulesData'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'usercourses',
+                    let: { courseId: '$_id' },
+                    pipeline: [{ $match: { $expr: { $and: [{ $eq: ["$courseId", "$$courseId"] }, { $in: ["$status", [1, 2]] }] } } }],
+                    as: 'userData'
+                }
+            },
+            {
+                $addFields: {
+                    userCount: { $size: '$userData' }
+                }
+            },
+            {
+                $project: {
+                    userData: 0
                 }
             }
         ]);
@@ -249,6 +271,36 @@ router.get('/:id', async (req, res) => {
             success: true,
             data: course,
             message: 'Course found'
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success: false,
+            error: error.message,
+            message: 'Failed to find course'
+        });
+    }
+});
+router.delete('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const course = await Course.findById(id);
+        if (!course) {
+            res.status(404).json({
+                success: false,
+                message: 'Course not found'
+            });
+            return;
+        }
+        await userCourse.deleteMany({ courseId: new mongoose.Types.ObjectId(id) });
+        await modulesSchema.deleteMany({ courseId: new mongoose.Types.ObjectId(id) });
+        await questionSchema.deleteMany({ courseId: new mongoose.Types.ObjectId(id) });
+        let courses = await courseSchema.findByIdAndDelete(new mongoose.Types.ObjectId(id));
+
+        return res.status(200).json({
+            success: true,
+            data: courses,
+            message: 'Courses deleted'
         });
     } catch (error) {
         console.error(error);
