@@ -40,12 +40,39 @@ import BasicLayout from "layouts/authentication/components/BasicLayout";
 
 // Images
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
+import axios from "axios";
+import CustomToast from "examples/ShowNotification";
 
 function Basic() {
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const handleSubmit = (event) => {
+    console.log("here ");
+    event.preventDefault(); // Prevent the default form submission behavior
 
+    // Create an object with the user's credentials
+    const credentials = {
+      email: email,
+      password: password,
+    };
+
+    // Make an API POST request to the login endpoint
+    axios
+      .post("https://backend.internative.in/admin/login", credentials)
+      .then((response) => {
+        // Handle the successful login response here
+        console.log("Login successful:", response.data);
+        CustomToast.success("login successful");
+      })
+      .catch((error) => {
+        CustomToast.error("invalid login details");
+        // Handle any errors or failed login attempts
+        console.error("Login failed:", error);
+      });
+  };
   return (
     <BasicLayout image={bgImage}>
       <Card>
@@ -63,7 +90,10 @@ function Basic() {
           <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
             Sign in
           </MDTypography>
-          <Grid container spacing={3} justifyContent="center" sx={{ mt: 1, mb: 2 }}>
+          <MDTypography variant="h4" fontWeight="medium" color="white" mt={1}>
+            Internative Edu
+          </MDTypography>
+          {/* <Grid container spacing={3} justifyContent="center" sx={{ mt: 1, mb: 2 }}>
             <Grid item xs={2}>
               <MDTypography component={MuiLink} href="#" variant="body1" color="white">
                 <FacebookIcon color="inherit" />
@@ -79,15 +109,25 @@ function Basic() {
                 <GoogleIcon color="inherit" />
               </MDTypography>
             </Grid>
-          </Grid>
+          </Grid> */}
         </MDBox>
         <MDBox pt={4} pb={3} px={3}>
-          <MDBox component="form" role="form">
+          <MDBox component="form" role="form" onSubmit={handleSubmit}>
             <MDBox mb={2}>
-              <MDInput type="email" label="Email" fullWidth />
+              <MDInput
+                type="email"
+                label="Email"
+                fullWidth
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </MDBox>
             <MDBox mb={2}>
-              <MDInput type="password" label="Password" fullWidth />
+              <MDInput
+                type="password"
+                label="Password"
+                fullWidth
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </MDBox>
             <MDBox display="flex" alignItems="center" ml={-1}>
               <Switch checked={rememberMe} onChange={handleSetRememberMe} />
