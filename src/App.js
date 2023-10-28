@@ -53,6 +53,8 @@ import { useMaterialUIController, setMiniSidenav, setOpenConfigurator } from "co
 import brandWhite from "assets/images/logo-ct.png";
 import brandDark from "assets/images/logo-ct-dark.png";
 import { CustomToastContainer } from "examples/ShowNotification";
+import AuthRouteGuard from "guard/AuthRouteGuard";
+import { AuthenticationProvider } from "context/AuthenticationService";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -115,9 +117,18 @@ export default function App() {
       if (route.collapse) {
         return getRoutes(route.collapse);
       }
-
-      if (route.route) {
+      console.log(route.route);
+      if (route.route && ["sign-in", "sign-up"].includes(route.key)) {
         return <Route exact path={route.route} element={route.component} key={route.key} />;
+      } else {
+        return (
+          <Route
+            exact
+            path={route.route}
+            element={<AuthRouteGuard>{route.component}</AuthRouteGuard>}
+            key={route.key}
+          />
+        );
       }
 
       return null;
@@ -147,54 +158,58 @@ export default function App() {
     </MDBox>
   );
 
-  return direction === "rtl" ? (
-    <CacheProvider value={rtlCache}>
-      <ThemeProvider theme={darkMode ? themeDarkRTL : themeRTL}>
-        <CssBaseline />
-        {layout === "dashboard" && (
-          <>
-            <Sidenav
-              color={sidenavColor}
-              brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
-              brandName="Internative"
-              routes={routes}
-              onMouseEnter={handleOnMouseEnter}
-              onMouseLeave={handleOnMouseLeave}
-            />
-            <Configurator />
-            {configsButton}
-          </>
-        )}
-        {layout === "vr" && <Configurator />}
-        <Routes>
-          {getRoutes(routes)}
-          <Route path="*" element={<Navigate to="/authentication/sign-in" />} />
-        </Routes>
-      </ThemeProvider>
-    </CacheProvider>
-  ) : (
-    <ThemeProvider theme={darkMode ? themeDark : theme}>
-      <CssBaseline />
-      {layout === "dashboard" && (
-        <>
-          <Sidenav
-            color={sidenavColor}
-            brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
-            brandName="Internative"
-            routes={routes}
-            onMouseEnter={handleOnMouseEnter}
-            onMouseLeave={handleOnMouseLeave}
-          />
-          <Configurator />
-          {configsButton}
-        </>
+  return (
+    <AuthenticationProvider>
+      {direction === "rtl" ? (
+        <CacheProvider value={rtlCache}>
+          <ThemeProvider theme={darkMode ? themeDarkRTL : themeRTL}>
+            <CssBaseline />
+            {layout === "dashboard" && (
+              <>
+                <Sidenav
+                  color={sidenavColor}
+                  brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
+                  brandName="Internative"
+                  routes={routes}
+                  onMouseEnter={handleOnMouseEnter}
+                  onMouseLeave={handleOnMouseLeave}
+                />
+                <Configurator />
+                {configsButton}
+              </>
+            )}
+            {layout === "vr" && <Configurator />}
+            <Routes>
+              {getRoutes(routes)}
+              <Route path="*" element={<Navigate to="/authentication/sign-in" />} />
+            </Routes>
+          </ThemeProvider>
+        </CacheProvider>
+      ) : (
+        <ThemeProvider theme={darkMode ? themeDark : theme}>
+          <CssBaseline />
+          {layout === "dashboard" && (
+            <>
+              <Sidenav
+                color={sidenavColor}
+                brand={(transparentSidenav && !darkMode) || whiteSidenav ? brandDark : brandWhite}
+                brandName="Internative"
+                routes={routes}
+                onMouseEnter={handleOnMouseEnter}
+                onMouseLeave={handleOnMouseLeave}
+              />
+              <Configurator />
+              {configsButton}
+            </>
+          )}
+          {layout === "vr" && <Configurator />}
+          <Routes>
+            {getRoutes(routes)}
+            <Route path="*" element={<Navigate to="/authentication/sign-in" />} />
+          </Routes>
+          <CustomToastContainer />
+        </ThemeProvider>
       )}
-      {layout === "vr" && <Configurator />}
-      <Routes>
-        {getRoutes(routes)}
-        <Route path="*" element={<Navigate to="/authentication/sign-in" />} />
-      </Routes>
-      <CustomToastContainer />
-    </ThemeProvider>
+    </AuthenticationProvider>
   );
 }

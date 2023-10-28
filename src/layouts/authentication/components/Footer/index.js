@@ -57,7 +57,7 @@ function Footer({ light }) {
               </Icon>
             </MDBox>
             by
-            <Link href="#" target="_blank">
+            <Link href="https://internative.in/" target="_blank">
               <MDTypography variant="button" fontWeight="medium" color={light ? "white" : "dark"}>
                 &nbsp;Internative&nbsp;
               </MDTypography>

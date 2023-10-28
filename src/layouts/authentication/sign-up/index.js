@@ -31,10 +31,11 @@ import CoverLayout from "layouts/authentication/components/CoverLayout";
 
 // Images
 import bgImage from "assets/images/bg-sign-up-cover.jpeg";
+import BasicLayout from "../components/BasicLayout";
 
 function Cover() {
   return (
-    <CoverLayout image={bgImage}>
+    <BasicLayout image={bgImage}>
       <Card>
         <MDBox
           variant="gradient"
@@ -88,7 +89,7 @@ function Cover() {
             </MDBox>
             <MDBox mt={4} mb={1}>
               <MDButton variant="gradient" color="info" fullWidth>
-                sign in
+                Register
               </MDButton>
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">
@@ -109,7 +110,7 @@ function Cover() {
           </MDBox>
         </MDBox>
       </Card>
-    </CoverLayout>
+    </BasicLayout>
   );
 }
 
