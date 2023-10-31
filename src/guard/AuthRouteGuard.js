@@ -5,10 +5,8 @@ import PropTypes from "prop-types";
 import { Navigate } from "react-router-dom";
 
 function AuthRouteGuard({ children }) {
-  const authContext = useAuthentication();
-  console.log("context");
-  console.log(authContext);
-  const authenticated = false;
+  const { authenticated } = useAuthentication();
+  console.log(authenticated);
   if (!authenticated) {
     return <Navigate to="/authentication/sign-in" />;
   }

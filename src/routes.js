@@ -56,6 +56,7 @@ const routes = [
     key: "dashboard",
     icon: <Icon fontSize="small">dashboard</Icon>,
     route: "/dashboard",
+    hidden: false,
     component: <Dashboard />,
   },
   {
@@ -64,6 +65,7 @@ const routes = [
     key: "course",
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/course",
+    hidden: false,
     component: <Course />,
   },
   {
@@ -72,6 +74,7 @@ const routes = [
     key: "tables",
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/tables",
+    hidden: true,
     component: <Tables />,
   },
   {
@@ -80,6 +83,7 @@ const routes = [
     key: "billing",
     icon: <Icon fontSize="small">receipt_long</Icon>,
     route: "/billing",
+    hidden: true,
     component: <Billing />,
   },
   {
@@ -88,6 +92,7 @@ const routes = [
     key: "rtl",
     icon: <Icon fontSize="small">format_textdirection_r_to_l</Icon>,
     route: "/rtl",
+    hidden: true,
     component: <RTL />,
   },
   {
@@ -96,6 +101,7 @@ const routes = [
     key: "notifications",
     icon: <Icon fontSize="small">notifications</Icon>,
     route: "/notifications",
+    hidden: false,
     component: <Notifications />,
   },
   {
@@ -104,6 +110,7 @@ const routes = [
     key: "profile",
     icon: <Icon fontSize="small">person</Icon>,
     route: "/profile",
+    hidden: true,
     component: <Profile />,
   },
   {
@@ -112,6 +119,7 @@ const routes = [
     key: "sign-in",
     icon: <Icon fontSize="small">login</Icon>,
     route: "/authentication/sign-in",
+    hidden: true,
     component: <SignIn />,
   },
   {
@@ -120,6 +128,7 @@ const routes = [
     key: "sign-up",
     icon: <Icon fontSize="small">assignment</Icon>,
     route: "/authentication/sign-up",
+    hidden: true,
     component: <SignUp />,
   },
 ];

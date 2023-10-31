@@ -41,9 +41,13 @@ import BasicLayout from "layouts/authentication/components/BasicLayout";
 // Images
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
 import axios from "axios";
-import CustomToast from "examples/ShowNotification";
+import { useNavigate } from "react-router-dom";
+import { useAuthentication } from "context/AuthenticationService";
+import { CustomToastContainer } from "examples/ShowNotification";
 
 function Basic() {
+  const navigate = useNavigate();
+  const { login, customNotification } = useAuthentication();
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
@@ -52,23 +56,28 @@ function Basic() {
   const handleSubmit = (event) => {
     console.log("here ");
     event.preventDefault(); // Prevent the default form submission behavior
+    // login("your-access-token", "your-refresh-token");
 
+    // navigate("/dashboard", { replace: true });
+    // return;
     // Create an object with the user's credentials
     const credentials = {
       email: email,
       password: password,
     };
+    // CustomToast.success("login successful");
 
     // Make an API POST request to the login endpoint
     axios
-      .post("https://backend.internative.in/admin/login", credentials)
+      .post("http://localhost:5000/admin/login", credentials)
       .then((response) => {
         // Handle the successful login response here
-        console.log("Login successful:", response.data);
-        CustomToast.success("login successful");
+        login(response.data.data.data.generatedToken, response.data.data.data.refreshToken);
+        customNotification.success({ title: "login successful" });
+        navigate("/dashboard", { replace: true });
       })
       .catch((error) => {
-        CustomToast.error("invalid login details");
+        customNotification.success({ title: "invalid login details" });
         // Handle any errors or failed login attempts
         console.error("Login failed:", error);
       });
@@ -142,7 +151,7 @@ function Basic() {
               </MDTypography>
             </MDBox>
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth>
+              <MDButton type="submit" variant="gradient" color="info" fullWidth>
                 sign in
               </MDButton>
             </MDBox>

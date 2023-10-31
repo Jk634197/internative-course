@@ -55,6 +55,7 @@ import brandDark from "assets/images/logo-ct-dark.png";
 import { CustomToastContainer } from "examples/ShowNotification";
 import AuthRouteGuard from "guard/AuthRouteGuard";
 import { AuthenticationProvider } from "context/AuthenticationService";
+import CustomNotification from "examples/CustomNotification";
 
 export default function App() {
   const [controller, dispatch] = useMaterialUIController();
@@ -159,6 +160,7 @@ export default function App() {
 
   return (
     <AuthenticationProvider>
+      <CustomNotification />
       {direction === "rtl" ? (
         <CacheProvider value={rtlCache}>
           <ThemeProvider theme={darkMode ? themeDarkRTL : themeRTL}>

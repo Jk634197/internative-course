@@ -231,7 +231,6 @@ function Course() {
   //     getCourseData();
   //   }
   // }, [])
-
   const handleSubmit = async (event) => {
     event.preventDefault();
 

@@ -12,30 +12,34 @@ export const AuthenticationProvider = ({ children }) => {
   const [authenticated, setAuthenticated] = useState(false);
   const [accessToken, setAccessToken] = useState(localStorage.getItem("accessToken") || null);
   const [refreshToken, setRefreshToken] = useState(localStorage.getItem("refreshToken") || null);
+  const [notification, setNotification] = useState({
+    isShow: false,
+    type: "",
+    title: "",
+    description: "",
+  });
 
   // Function to handle token refresh
   const refreshAccessToken = async () => {
     // Make an API call to refresh the access token using the refresh token
     try {
-      const response = await fetch("/api/refresh-token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${refreshToken}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAccessToken(data.accessToken);
-
-        // Schedule the next token refresh (e.g., a minute before expiration)
-        const expiresIn = data.expiresIn * 1000;
-        setTimeout(refreshAccessToken, expiresIn - 60000);
-      } else {
-        // Handle token refresh failure (e.g., log the user out)
-        logout();
-      }
+      //   const response = await fetch("/api/refresh-token", {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //       Authorization: `Bearer ${refreshToken}`,
+      //     },
+      //   });
+      //   if (response.ok) {
+      //     const data = await response.json();
+      //     setAccessToken(data.accessToken);
+      //     // Schedule the next token refresh (e.g., a minute before expiration)
+      //     const expiresIn = data.expiresIn * 1000;
+      //     setTimeout(refreshAccessToken, expiresIn - 60000);
+      //   } else {
+      //     // Handle token refresh failure (e.g., log the user out)
+      //     logout();
+      //   }
     } catch (error) {
       // Handle network errors
       console.error("Token refresh failed:", error);
@@ -66,6 +70,23 @@ export const AuthenticationProvider = ({ children }) => {
     setAuthenticated(false);
   };
 
+  const removeNotification = () => {
+    setNotification({
+      isShow: false,
+      type: "",
+      title: "",
+      description: "",
+    });
+  };
+
+  const customNotification = {
+    success: ({ title, message }) =>
+      setNotification({ isShow: true, title, message, type: "success" }),
+    error: ({ title, message }) => setNotification({ isShow: true, title, message, type: "error" }),
+    info: ({ title, message }) => setNotification({ isShow: true, title, message, type: "info" }),
+    warning: ({ title, message }) =>
+      setNotification({ isShow: true, title, message, type: "warning" }),
+  };
   // Check if the access token is still valid on initial load
   useEffect(() => {
     if (accessToken) {
@@ -75,7 +96,17 @@ export const AuthenticationProvider = ({ children }) => {
   }, [accessToken]);
 
   return (
-    <AuthenticationContext.Provider value={{ authenticated, accessToken, login, logout }}>
+    <AuthenticationContext.Provider
+      value={{
+        notification,
+        customNotification,
+        removeNotification,
+        authenticated,
+        accessToken,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthenticationContext.Provider>
   );
