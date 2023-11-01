@@ -66,7 +66,7 @@ export default function data() {
   };
   const fetchData = async () => {
     try {
-      const response = await fetch("http://localhost:5000/course/");
+      const response = await fetch("https://backend.internative.in/course/");
       const data = await response.json();
       setData(data.data);
       setElements(

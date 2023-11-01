@@ -69,7 +69,7 @@ function Basic() {
 
     // Make an API POST request to the login endpoint
     axios
-      .post("http://localhost:5000/admin/login", credentials)
+      .post("https://backend.internative.in/admin/login", credentials)
       .then((response) => {
         // Handle the successful login response here
         login(response.data.data.data.generatedToken, response.data.data.data.refreshToken);
