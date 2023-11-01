@@ -44,7 +44,7 @@ exports.authenticateToken = async (req, res, next) => {
     const token = authHeader && authHeader.split(' ')[1] || req.signedCookies.access_token
     // console.log(token);
 
-    if (!token) return res.status(401).json({ issuccess: false, data: { acknowledgement: false }, message: "please send valid request" });
+    if (!token) return res.status(401).json({ issuccess: false, data: { acknowledgement: false }, message: "You are not authenticated user" });
 
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, user) => {
         if (err) return res.status(403).json({ issuccess: false, data: { acknowledgement: false }, message: "Token Expired or Invalid Token" });
@@ -117,6 +117,12 @@ exports.parseJwt = (token) => {
     }).join(''));
 
     return JSON.parse(jsonPayload);
+};
+exports.validateAdmin = (req,res,next) => {
+    if(req.user.role === 0){
+        return res.status(403).json({issuccess:false,data:null,message:'You have not valid right to access this page'})
+    }
+    next();
 };
 
 //generate access token and refesh token for user

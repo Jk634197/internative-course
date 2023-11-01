@@ -4,7 +4,7 @@ const { default: mongoose } = require("mongoose");
 const bcrypt = require("bcrypt");
 const userAdminSchema = require("../models/userAdminSchema");
 const { checkErr } = require("../utils/error");
-const { generateAccessToken } = require("../middleware/auth");
+const { generateAccessToken, authenticateToken, validateAdmin } = require("../middleware/auth");
 const userSchema = require("../models/userSchema");
 var router = express.Router();
 router.post(
@@ -23,7 +23,10 @@ router.post(
       checkExist = await userAdminSchema.aggregate([
         {
           $match: {
-            $or: [{ email: email }],
+            $and:[
+              {$or: [{ email: email }]},
+              {isVerified:true}
+            ]
           },
         },
         {
@@ -125,7 +128,7 @@ router.post(
       ]);
 
       if (checkExist.length > 0) {
-        return res.status(404).json({
+        return res.status(200).json({
           issuccess: false,
           data: { acknowledgement: false, data: true },
           message: "user already exist with same email or mobileno",
@@ -137,6 +140,7 @@ router.post(
         mobileNo,
         password,
         email,
+        role: 0
       });
 
       await createUser.save();
@@ -382,9 +386,14 @@ router.post(
   }
 );
 
-router.get("/user-list", async (req, res) => {
+router.get("/user-list",authenticateToken,validateAdmin, async (req, res) => {
   try {
     const userList = await userSchema.aggregate([
+      {
+        $match:{
+
+        }
+      },
       {
         $project:{
           password:0
@@ -421,4 +430,35 @@ router.get("/user-list", async (req, res) => {
   }
 });
 
+router.get("/admin-list", authenticateToken, validateAdmin, async (req, res) => {
+  try {
+    const userList = await userAdminSchema.aggregate([
+      {$match:{
+
+      }}
+    ]);
+    return res.json(userList);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+router.post("/verify-internal", authenticateToken, validateAdmin, async (req, res) => {
+  try {
+    const {userId, isVerified} = req.body;
+    const userList = await userAdminSchema.aggregate([
+      {$match:{
+        _id:new mongoose.Types.ObjectId(userId)
+      }}
+    ]);
+    if(userList.length>0){
+      const userUpdate = await userAdminSchema.findByIdAndUpdate(userId,{isVerified},{new:true});
+      return res.status(200).json({ issuccess: true, data: { acknowledgement: true,data:userUpdate }, message: "user status updated" });
+    }
+    return res.status(200).json({ issuccess: false, data: { acknowledgement: false }, message: "user not found" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 module.exports = router;
