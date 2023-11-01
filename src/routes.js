@@ -47,6 +47,7 @@ import SignUp from "layouts/authentication/sign-up";
 // @mui icons
 import Icon from "@mui/material/Icon";
 import Course from "layouts/course";
+import User from "layouts/users";
 import Notifications from "layouts/notifications";
 
 const routes = [
@@ -67,6 +68,15 @@ const routes = [
     route: "/course",
     hidden: false,
     component: <Course />,
+  },
+  {
+    type: "collapse",
+    name: "User",
+    key: "user",
+    icon: <Icon fontSize="small">table_view</Icon>,
+    route: "/user-list",
+    hidden: false,
+    component: <User />,
   },
   {
     type: "collapse",
@@ -101,7 +111,7 @@ const routes = [
     key: "notifications",
     icon: <Icon fontSize="small">notifications</Icon>,
     route: "/notifications",
-    hidden: false,
+    hidden: true,
     component: <Notifications />,
   },
   {

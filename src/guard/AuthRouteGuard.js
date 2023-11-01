@@ -6,7 +6,7 @@ import { Navigate } from "react-router-dom";
 
 function AuthRouteGuard({ children }) {
   const { authenticated } = useAuthentication();
-  console.log(authenticated);
+
   if (!authenticated) {
     return <Navigate to="/authentication/sign-in" />;
   }

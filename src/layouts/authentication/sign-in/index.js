@@ -13,7 +13,7 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // react-router-dom components
 import { Link } from "react-router-dom";
@@ -47,7 +47,7 @@ import { CustomToastContainer } from "examples/ShowNotification";
 
 function Basic() {
   const navigate = useNavigate();
-  const { login, customNotification } = useAuthentication();
+  const { login, authenticated, customNotification } = useAuthentication();
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
@@ -82,6 +82,11 @@ function Basic() {
         console.error("Login failed:", error);
       });
   };
+  useEffect(() => {
+    if (authenticated) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, []);
   return (
     <BasicLayout image={bgImage}>
       <Card>

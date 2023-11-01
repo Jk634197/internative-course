@@ -35,7 +35,7 @@ import DataTable from "examples/Tables/DataTable";
 
 // Data
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import authorsTableData from "layouts/course/data/authorsTableData";
+import authorsTableData from "./data/authorsTableData";
 import projectsTableData from "layouts/tables/data/projectsTableData";
 import MDButton from "components/MDButton";
 import ReactQuill from "react-quill";
@@ -656,14 +656,14 @@ function Course() {
                   <Grid container spacing={3}>
                     <Grid item xs={6}>
                       <MDTypography variant="h6" color="white">
-                        Course Table
+                        User List
                       </MDTypography>
                     </Grid>
-                    <Grid item xs={6} align="right">
+                    {/* <Grid item xs={6} align="right">
                       <MDButton color="info" onClick={() => setAdd(true)}>
                         <AddIcon sx={{ fontWeight: 300 }} /> &nbsp;&nbsp; New Course
                       </MDButton>
-                    </Grid>
+                    </Grid> */}
                   </Grid>
                 </MDBox>
                 <MDBox pt={3}>

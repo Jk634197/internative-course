@@ -89,11 +89,16 @@ export const AuthenticationProvider = ({ children }) => {
   };
   // Check if the access token is still valid on initial load
   useEffect(() => {
-    if (accessToken) {
+    console.log("checking");
+    const accessTokenLocal = localStorage.getItem("accessToken");
+    console.log(accessTokenLocal);
+    if (accessTokenLocal) {
+      setAuthenticated(true);
+      setAccessToken(accessTokenLocal);
       // Decode and check the expiration of the access token
       // If it's expired, refresh it
     }
-  }, [accessToken]);
+  }, []);
 
   return (
     <AuthenticationContext.Provider

@@ -33,47 +33,46 @@ export default function data() {
   const [data, setData] = useState([]);
   const [showNotification, setShowNotification] = useState(false);
   const [elements, setElements] = useState([]);
-  const handleDelete = async (key) => {
-    try {
-      const updatedData = data.map((item) =>
-        item.key === key ? { ...item, isDeleting: true } : item
-      );
+  // const handleDelete = async (key) => {
+  //   try {
+  //     const updatedData = data.map((item) =>
+  //       item.key === key ? { ...item, isDeleting: true } : item
+  //     );
 
-      setData(updatedData);
+  //     setData(updatedData);
 
-      console.log(`Delete button clicked for key: ${key}`);
-      // await axios
-      //   .delete(`https://backend.internative.in/course/${key}`)
-      //   .then(() => {
-      //     CustomToast.success("course deleted successfully");
-      //     fetchData();
-      //   })
-      //   .catch((error) => {
-      //     CustomToast.error("delete course failed");
-      //     console.error("Error fetching data:", error);
-      //   });
-    } catch (error) {
-      CustomToast.error("delete course failed");
-      console.error("Error fetching data:", error);
-    } finally {
-      // Reset the deletion state after the operation (whether success or failure)
-      const updatedData = data.map((item) =>
-        item.key === key ? { ...item, isDeleting: false } : item
-      );
+  //     console.log(`Delete button clicked for key: ${key}`);
+  //     // await axios
+  //     //   .delete(`https://backend.internative.in/course/${key}`)
+  //     //   .then(() => {
+  //     //     CustomToast.success("course deleted successfully");
+  //     //     fetchData();
+  //     //   })
+  //     //   .catch((error) => {
+  //     //     CustomToast.error("delete course failed");
+  //     //     console.error("Error fetching data:", error);
+  //     //   });
+  //   } catch (error) {
+  //     CustomToast.error("delete course failed");
+  //     console.error("Error fetching data:", error);
+  //   } finally {
+  //     // Reset the deletion state after the operation (whether success or failure)
+  //     const updatedData = data.map((item) =>
+  //       item.key === key ? { ...item, isDeleting: false } : item
+  //     );
 
-      setData(updatedData);
-    }
-  };
+  //     setData(updatedData);
+  //   }
+  // };
   const fetchData = async () => {
     try {
-      const response = await fetch("http://localhost:5000/course/");
+      const response = await fetch("http://localhost:5000/admin/user-list");
       const data = await response.json();
-      setData(data.data);
+      setData(data);
       setElements(
-        data.data.map((course) => {
+        data.map((user) => {
           return {
-            name: <Author name={course.title} />,
-            students: (
+            name: (
               <MDTypography
                 component="div"
                 href="#"
@@ -81,10 +80,10 @@ export default function data() {
                 color="text"
                 fontWeight="medium"
               >
-                {course.userCount}
+                {`${user.first} ${user.last}`}
               </MDTypography>
             ),
-            tagline: (
+            email: (
               <MDTypography
                 component="div"
                 href="#"
@@ -92,10 +91,10 @@ export default function data() {
                 color="text"
                 fontWeight="medium"
               >
-                {course.tagline}
+                {user.email}
               </MDTypography>
             ),
-            duration: (
+            mobileNo: (
               <MDTypography
                 component="div"
                 href="#"
@@ -103,10 +102,10 @@ export default function data() {
                 color="text"
                 fontWeight="medium"
               >
-                {course.duration}
+                {user.mobileNo}
               </MDTypography>
             ),
-            type: (
+            birthDate: (
               <MDTypography
                 component="div"
                 href="#"
@@ -114,23 +113,18 @@ export default function data() {
                 color="text"
                 fontWeight="medium"
               >
-                {course.isShort ? "Short" : "Long"}
+                {user.birthDate}
               </MDTypography>
             ),
-            action: (
+            isVerified: (
               <MDTypography
-                component="a"
+                component="div"
                 href="#"
-                onClick={() => handleDelete(course._id)}
                 variant="caption"
                 color="text"
                 fontWeight="medium"
               >
-                {course.isDeleting ? (
-                  <CircularProgress /> // Show loading icon for this row only
-                ) : (
-                  <Button>Delete</Button>
-                )}
+                {user.isVerified ? "Verified" : "Unverified"}
               </MDTypography>
             ),
           };
@@ -168,12 +162,11 @@ export default function data() {
 
   return {
     columns: [
-      { Header: "Title", accessor: "name", width: "45%", align: "left" },
-      { Header: "Students", accessor: "students", align: "left" },
-      { Header: "Tagline", accessor: "tagline", align: "center" },
-      { Header: "Duration (months)", accessor: "duration", align: "center" },
-      { Header: "Type", accessor: "type", align: "center" },
-      { Header: "Action", accessor: "action", align: "center" },
+      { Header: "Name", accessor: "name", width: "45%", align: "left" },
+      { Header: "Email", accessor: "email", align: "left" },
+      { Header: "Mobile", accessor: "mobileNo", align: "center" },
+      { Header: "Birth Date", accessor: "birthDate", align: "center" },
+      { Header: "Verification", accessor: "isVerified", align: "center" },
     ],
 
     rows: elements,
