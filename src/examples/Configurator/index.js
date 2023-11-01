@@ -284,7 +284,7 @@ function Configurator() {
 
           <Switch checked={darkMode} onChange={handleDarkMode} />
         </MDBox>
-        <Divider />
+        {/* <Divider />
         <MDBox mt={3} mb={2}>
           <MDButton
             component={Link}
@@ -338,7 +338,7 @@ function Configurator() {
               &nbsp; Share
             </MDButton>
           </MDBox>
-        </MDBox>
+        </MDBox> */}
       </MDBox>
     </ConfiguratorRoot>
   );
