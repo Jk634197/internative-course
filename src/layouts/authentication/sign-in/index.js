@@ -39,7 +39,7 @@ import MDButton from "components/MDButton";
 import BasicLayout from "layouts/authentication/components/BasicLayout";
 
 // Images
-import bgImage from "assets/images/bg-sign-in-basic.jpeg";
+// import bgImage from "./bg-sign-in-basic.jpeg";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useAuthentication } from "context/AuthenticationService";
@@ -74,21 +74,21 @@ function Basic() {
         // Handle the successful login response here
         login(response.data.data.data.generatedToken, response.data.data.data.refreshToken);
         customNotification.success({ title: "login successful" });
-        navigate("/dashboard", { replace: true });
+        navigate("/course", { replace: true });
       })
       .catch((error) => {
-        customNotification.success({ title: "invalid login details" });
+        customNotification.error({ title: "invalid login details" });
         // Handle any errors or failed login attempts
         console.error("Login failed:", error);
       });
   };
   useEffect(() => {
     if (authenticated) {
-      navigate("/dashboard", { replace: true });
+      navigate("/course", { replace: true });
     }
   }, []);
   return (
-    <BasicLayout image={bgImage}>
+    <BasicLayout image={"/bg-sign-in-basic.jpeg"}>
       <Card>
         <MDBox
           variant="gradient"

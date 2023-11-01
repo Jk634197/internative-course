@@ -47,8 +47,10 @@ import {
   setSidenavColor,
   setDarkMode,
 } from "context";
+import { useAuthentication } from "context/AuthenticationService";
 
 function Configurator() {
+  const { logout } = useAuthentication();
   const [controller, dispatch] = useMaterialUIController();
   const {
     openConfigurator,
@@ -284,8 +286,21 @@ function Configurator() {
 
           <Switch checked={darkMode} onChange={handleDarkMode} />
         </MDBox>
-        {/* <Divider />
+        <Divider />
         <MDBox mt={3} mb={2}>
+          <MDButton
+            rel="noreferrer"
+            color="error"
+            variant="outlined"
+            fullWidth
+            onClick={() => {
+              logout();
+            }}
+          >
+            Log Out
+          </MDButton>
+        </MDBox>
+        {/*<MDBox mt={3} mb={2}>
           <MDButton
             component={Link}
             href="https://www.creative-tim.com/learning-lab/react/quick-start/material-dashboard/"

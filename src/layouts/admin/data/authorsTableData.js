@@ -19,21 +19,20 @@ Coded by www.creative-tim.com
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDAvatar from "components/MDAvatar";
-import MDBadge from "components/MDBadge";
 
 // Images
-import team2 from "assets/images/team-2.jpg";
-import team3 from "assets/images/team-3.jpg";
-import team4 from "assets/images/team-4.jpg";
-import { Button, CircularProgress, Typography } from "@mui/material";
+import { FormControl, InputLabel, MenuItem } from "@mui/material";
 import { useEffect, useState } from "react";
 import CustomToast from "examples/ShowNotification";
-import { useAuthentication } from "context/AuthenticationService";
 import { get } from "api";
+import { useAuthentication } from "context/AuthenticationService";
+import Box from "@mui/material/Box";
+import Select from "@mui/material/Select";
+import { post } from "api";
+import ArrowDropDown from "@mui/icons-material/ArrowDropDown";
 
 export default function data() {
   const context = useAuthentication();
-  const { customNotification } = context;
   const [data, setData] = useState([]);
   const [showNotification, setShowNotification] = useState(false);
   const [elements, setElements] = useState([]);
@@ -71,12 +70,11 @@ export default function data() {
   const fetchData = async () => {
     try {
       const data = await get(
-        "https://backend.internative.in/admin/user-list",
-        customNotification,
+        "https://backend.internative.in/admin/admin-list",
+        context.customNotification,
         true,
         context
       );
-      console.log(data);
       setData(data);
       setElements(
         data.map((user) => {
@@ -114,38 +112,42 @@ export default function data() {
                 {user.mobileNo}
               </MDTypography>
             ),
-            birthDate: (
-              <MDTypography
-                component="div"
-                href="#"
-                variant="caption"
-                color="text"
-                fontWeight="medium"
-              >
-                {user.birthDate}
-              </MDTypography>
-            ),
+            // birthDate: (
+            //   <MDTypography
+            //     component="div"
+            //     href="#"
+            //     variant="caption"
+            //     color="text"
+            //     fontWeight="medium"
+            //   >
+            //     {user.birthDate}
+            //   </MDTypography>
+            // ),
             isVerified: (
-              <MDTypography
-                component="div"
-                href="#"
-                variant="caption"
-                color="text"
-                fontWeight="medium"
-              >
-                {user.isVerified ? "Verified" : "Unverified"}
-              </MDTypography>
+              <MDBox component="div" href="#" variant="caption" color="text" fontWeight="medium">
+                <VerificationComponent tag={user.isVerified} id={user._id} />
+              </MDBox>
             ),
           };
         })
       );
+      CustomToast.success("data fetch done");
     } catch (error) {
-      console.log(error);
-      customNotification.error({ title: "error in getting user-list" });
       console.error("Error fetching data:", error);
     }
   };
-
+  const updateVerification = async (userId, isVerified) => {
+    const response = await post(
+      "https://backend.internative.in/admin/verify-internal",
+      { userId, isVerified },
+      context.customNotification,
+      true,
+      context
+    );
+    if (response.data.acknowledgement) {
+      fetchData();
+    }
+  };
   useEffect(() => {
     fetchData();
   }, []);
@@ -160,6 +162,32 @@ export default function data() {
       </MDBox>
     </MDBox>
   );
+  const VerificationComponent = ({ tag, id }) => {
+    const [age, setAge] = useState(tag);
+
+    const handleChange = (event) => {
+      setAge(event.target.value);
+      updateVerification(id, event.target.value);
+    };
+
+    return (
+      <Box sx={{ minWidth: 120 }}>
+        <FormControl fullWidth>
+          <Select
+            sx={{ width: "100%" }}
+            labelId="demo-simple-select-label"
+            id="demo-simple-select"
+            value={age}
+            onChange={handleChange}
+            fullWidth
+          >
+            <MenuItem value={true}>Verified</MenuItem>
+            <MenuItem value={false}>Unverified</MenuItem>
+          </Select>
+        </FormControl>
+      </Box>
+    );
+  };
 
   const Job = ({ title, description }) => (
     <MDBox lineHeight={1} textAlign="left">
@@ -172,11 +200,11 @@ export default function data() {
 
   return {
     columns: [
-      { Header: "Name", accessor: "name", width: "45%", align: "left" },
+      { Header: "Name", accessor: "name", width: "35%", align: "left" },
       { Header: "Email", accessor: "email", align: "left" },
       { Header: "Mobile", accessor: "mobileNo", align: "center" },
-      { Header: "Birth Date", accessor: "birthDate", align: "center" },
-      { Header: "Verification", accessor: "isVerified", align: "center" },
+      // { Header: "Birth Date", accessor: "birthDate", align: "center" },
+      { Header: "Verification", accessor: "isVerified", width: "30%", align: "center" },
     ],
 
     rows: elements,

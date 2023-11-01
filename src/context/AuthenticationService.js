@@ -14,9 +14,9 @@ export const AuthenticationProvider = ({ children }) => {
   const [refreshToken, setRefreshToken] = useState(localStorage.getItem("refreshToken") || null);
   const [notification, setNotification] = useState({
     isShow: false,
-    type: "",
-    title: "",
-    description: "",
+    type: "success",
+    title: "title",
+    description: "description",
   });
 
   // Function to handle token refresh
