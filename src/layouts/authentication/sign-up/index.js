@@ -107,7 +107,7 @@ function Cover() {
         axios
           .post("https://backend.internative.in/admin/signUp", registerData)
           .then((response) => {
-            if (!response.data.acknowledgement) {
+            if (response.data.acknowledgement === false) {
               customNotification.error({ title: response.data.message });
             } else {
               customNotification.success({ title: "registration successful" });

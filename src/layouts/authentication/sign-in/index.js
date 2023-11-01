@@ -71,10 +71,14 @@ function Basic() {
     axios
       .post("https://backend.internative.in/admin/login", credentials)
       .then((response) => {
-        // Handle the successful login response here
-        login(response.data.data.data.generatedToken, response.data.data.data.refreshToken);
-        customNotification.success({ title: "login successful" });
-        navigate("/course", { replace: true });
+        if (response.data.acknowledgement === false) {
+          customNotification.error({ title: response.data.message });
+        } else {
+          // Handle the successful login response here
+          login(response.data.data.data.generatedToken, response.data.data.data.refreshToken);
+          customNotification.success({ title: "login successful" });
+          navigate("/course", { replace: true });
+        }
       })
       .catch((error) => {
         customNotification.error({ title: "invalid login details" });
