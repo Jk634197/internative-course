@@ -8,22 +8,29 @@ const questionSchema = require('../models/questionSchema');
 const teamMember = require('../models/teamMember');
 const { uploadProfileImageToS3 } = require('../utils/aws');
 const { checkErr } = require('../utils/error');
+const { authenticateToken, validateAdmin } = require('../middleware/auth');
 // Create a new course
 router.post('/add', uploadProfileImageToS3('team').single('image'), [
     body('role', 'please pass valid role').notEmpty().isString().withMessage('please pass role'),
     body('name', 'please pass valid name').notEmpty().isString().withMessage('please pass name'),
+    body('position').notEmpty().isNumeric().withMessage('please pass valid position'),
+    body('visibility').optional().notEmpty().isBoolean().withMessage('please pass valid visibility'),
 ], checkErr, async (req, res) => {
-    const { name, role } = req.body;
-    const course = new teamMember({ name: name, role: role, image: req.file.location })
+    const { name, role, visibility,position } = req.body;
+    const course = new teamMember({ name: name, role: role, image: req.file.location,visibility,position })
     await course.save();
     return res.status(201).json({ issuccess: true, data: course, message: 'team member added' });
 });
 
 // Read all courses
 router.get('/', async (req, res) => {
-    const courses = await teamMember.find();
+    const courses = await teamMember.find({visibility:true});
     return res.status(201).json({ issuccess: true, data: courses, message: 'team member found' });
+});
 
+router.get('/admin',authenticateToken,validateAdmin, async (req, res) => {
+    const courses = await teamMember.find({});
+    return res.status(201).json({ issuccess: true, data: courses, message: 'team member found' });
 });
 
 // Read one course
@@ -45,8 +52,10 @@ router.get('/:id', [param('id').custom(async (value) => {
 
 // Update a course
 router.put('/:id', uploadProfileImageToS3('team').single('image'), [
-    body('role').notEmpty().isString().withMessage('please pass role'),
-    body('name').notEmpty().isString().withMessage('please pass name'),
+    body('role').optional().notEmpty().isString().withMessage('please pass role'),
+    body('name').optional().notEmpty().isString().withMessage('please pass name'),
+    body('position').optional().notEmpty().isNumeric().withMessage('please pass valid position'),
+    body('visibility').optional().notEmpty().isBoolean().withMessage('please pass valid visibility'),
     param('id').custom(async (value) => {
         if (!mongoose.isValidObjectId(value)) {
             throw new Error('Invalid member id');
@@ -57,10 +66,10 @@ router.put('/:id', uploadProfileImageToS3('team').single('image'), [
         }
     })
 ], checkErr, async (req, res) => {
-    const { role, name } = req.body;
+    const { role, name,position,visibility } = req.body;
 
     const team = await teamMember.findById(req.params.id);
-    let update = await teamMember.findByIdAndUpdate(req.params.id, { name, role, image: req.file != undefined ? req.file.location : team.image }, { new: true });
+    let update = await teamMember.findByIdAndUpdate(req.params.id, { name, role, image: req.file != undefined ? req.file.location : team.image,position,visibility }, { new: true });
     return res.status(200).json({ issuccess: true, data: update, message: 'team updated successfully' });
 
 });

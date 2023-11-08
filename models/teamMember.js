@@ -11,7 +11,15 @@ const teamMember = mongoose.Schema({
     image: {
         type: String,
         default: ""
-    }
+    },
+    position:{
+        type:Number,
+        default:0,
+    },
+    visibility:{
+        type:Boolean,
+        default:false
+    },
 }, { timestamps: true });
 
 module.exports = mongoose.model("team", teamMember);
